@@ -13,7 +13,8 @@ import EditorTabs, { OpenFile } from '@/components/EditorTabs';
 import TerminalComponent from '@/components/Terminal';
 import ActivityBar from '@/components/ActivityBar';
 import StatusBar from '@/components/StatusBar';
-import { X, Maximize2, Minimize2, MessageSquare, Bot, Share2 } from 'lucide-react';
+import Link from 'next/link';
+import { X, Maximize2, Minimize2, MessageSquare, Bot, Share2, LogOut } from 'lucide-react';
 
 import VoiceDebugger from '@/components/VoiceDebugger';
 
@@ -116,6 +117,9 @@ function RoomLayout() {
                                     >
                                         <Share2 size={16} />
                                     </button>
+                                    <Link href="/dashboard" className="p-1.5 rounded hover:bg-[#2a2d2e] transition-colors text-red-400 hover:text-red-300" title="Exit Room">
+                                        <LogOut size={16} />
+                                    </Link>
                                     <VoiceControls />
                                 </div>
                             </div>

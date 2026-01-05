@@ -46,16 +46,7 @@ export default function HackathonPage() {
     return (
         <div className="min-h-screen bg-[#0a0e1a] text-gray-200 font-sans pt-20">
             {/* Header */}
-            <header className="fixed top-0 w-full bg-[#0a0e1a]/90 backdrop-blur-md border-b border-white/10 px-8 py-4 z-[100] flex justify-between items-center">
-                <Link href="/" className="font-bold text-2xl flex items-center gap-2 bg-gradient-to-r from-[#00d4ff] to-[#ff00ff] bg-clip-text text-transparent">
-                    <i className="fas fa-code"></i> ZenCodr
-                </Link>
-                <div className="flex items-center gap-4">
-                    <Link href="/dashboard" className="px-4 py-2 rounded-lg border border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff]/10 transition-colors">
-                        Dashboard
-                    </Link>
-                </div>
-            </header>
+
 
 
             <div className="max-w-7xl mx-auto px-5 py-10">
@@ -71,8 +62,8 @@ export default function HackathonPage() {
                             key={filter}
                             onClick={() => setActiveFilter(filter)}
                             className={`px-4 py-2 rounded-full border transition-all capitalize text-sm ${activeFilter === filter
-                                    ? 'bg-gradient-to-r from-[#00d4ff] to-[#ff00ff] border-transparent text-white shadow-[0_0_15px_rgba(0,212,255,0.5)]'
-                                    : 'border-white/10 text-gray-400 hover:border-[#00d4ff] hover:text-white'
+                                ? 'bg-gradient-to-r from-[#00d4ff] to-[#ff00ff] border-transparent text-white shadow-[0_0_15px_rgba(0,212,255,0.5)]'
+                                : 'border-white/10 text-gray-400 hover:border-[#00d4ff] hover:text-white'
                                 }`}
                         >
                             {filter}
