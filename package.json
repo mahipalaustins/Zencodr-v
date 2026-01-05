@@ -1,0 +1,53 @@
+{
+  "name": "zencodr-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "server": "node server.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@monaco-editor/react": "^4.6.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "buffer": "^6.0.3",
+    "clsx": "^2.1.0",
+    "events": "^3.3.0",
+    "file-saver": "^2.0.5",
+    "jszip": "^3.10.1",
+    "lucide-react": "^0.300.0",
+    "monaco-editor": "^0.45.0",
+    "next": "14.1.0",
+    "process": "^0.11.10",
+    "react": "^18",
+    "react-dom": "^18",
+    "simple-peer": "^9.11.1",
+    "stream-browserify": "^3.0.0",
+    "tailwind-merge": "^2.2.0",
+    "util": "^0.12.5",
+    "uuid": "^9.0.1",
+    "webpack": "^5.104.1",
+    "xterm": "^5.3.0",
+    "xterm-addon-fit": "^0.8.0",
+    "y-monaco": "^0.1.5",
+    "y-websocket": "^1.5.0",
+    "yjs": "^13.6.10"
+  },
+  "devDependencies": {
+    "@types/file-saver": "^2.0.7",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@types/simple-peer": "^9.11.5",
+    "@types/uuid": "^9.0.7",
+    "autoprefixer": "^10.0.1",
+    "eslint": "^8",
+    "eslint-config-next": "14.1.0",
+    "postcss": "^8",
+    "tailwindcss": "^3.3.0",
+    "typescript": "^5"
+  }
+}

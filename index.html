@@ -1,0 +1,5182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenCodr - Real-time Collaborative Coding Platform</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-bg: #0a0e1a;
+            --secondary-bg: #121929;
+            --card-bg: rgba(18, 25, 41, 0.7);
+            --accent: #00d4ff;
+            --accent-secondary: #ff00ff;
+            --accent-tertiary: #00ff88;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --success: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0e1a 0%, #121929 50%, #0f1729 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Background animation */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 20% 30%, rgba(0, 212, 255, 0.1) 0%, transparent 25%),
+                radial-gradient(circle at 80% 70%, rgba(255, 0, 255, 0.1) 0%, transparent 25%),
+                radial-gradient(circle at 50% 50%, rgba(0, 255, 136, 0.05) 0%, transparent 40%);
+            z-index: -1;
+            animation: bgPulse 20s ease-in-out infinite;
+        }
+
+        @keyframes bgPulse {
+
+            0%,
+            100% {
+                opacity: 0.3;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        /* Preloader */
+        .preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--primary-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .preloader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader {
+            position: relative;
+            width: 100px;
+            height: 100px;
+        }
+
+        .loader-circle {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 3px solid transparent;
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1.5s linear infinite;
+        }
+
+        .loader-circle:nth-child(2) {
+            border-top-color: var(--accent-secondary);
+            animation-delay: 0.5s;
+            width: 80%;
+            height: 80%;
+            top: 10%;
+            left: 10%;
+        }
+
+        .loader-circle:nth-child(3) {
+            border-top-color: var(--accent-tertiary);
+            animation-delay: 1s;
+            width: 60%;
+            height: 60%;
+            top: 20%;
+            left: 20%;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Header & Navigation */
+        .header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideDown 0.5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 100%;
+            background: rgba(0, 212, 255, 0.2);
+            transition: width 0.3s ease;
+            z-index: -1;
+        }
+
+        .nav-link:hover::before {
+            width: 100%;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-link.active {
+            color: var(--accent);
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+            animation: glow 2s infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 5px var(--accent);
+            }
+
+            to {
+                box-shadow: 0 0 20px var(--accent), 0 0 30px var(--accent);
+            }
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .search-bar {
+            position: relative;
+        }
+
+        .search-input {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 2rem;
+            padding: 0.5rem 1rem 0.5rem 2.5rem;
+            color: var(--text-primary);
+            width: 200px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+            width: 250px;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .notification-btn {
+            position: relative;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .notification-btn:hover {
+            color: var(--text-primary);
+            transform: scale(1.1);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger);
+            color: white;
+            font-size: 0.7rem;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+
+        .user-profile {
+            position: relative;
+        }
+
+        .profile-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 2rem;
+            padding: 0.4rem 1rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .profile-btn:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .profile-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .profile-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 0.5rem;
+            min-width: 200px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+            display: none;
+            animation: fadeInDown 0.3s ease;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .profile-dropdown.active {
+            display: block;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.8rem 1rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: background 0.3s ease;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .dropdown-item i {
+            color: var(--text-secondary);
+            width: 20px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: 250px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border-right: 1px solid var(--glass-border);
+            padding: 2rem 0;
+            z-index: 50;
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 0 1.5rem 2rem;
+            border-bottom: 1px solid var(--glass-border);
+            margin-bottom: 1.5rem;
+        }
+
+        .sidebar-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-item {
+            margin-bottom: 0.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.8rem 1.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .sidebar-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 100%;
+            background: rgba(0, 212, 255, 0.1);
+            transition: width 0.3s ease;
+            z-index: -1;
+        }
+
+        .sidebar-link:hover::before {
+            width: 100%;
+        }
+
+        .sidebar-link:hover {
+            color: var(--text-primary);
+        }
+
+        .sidebar-link.active {
+            color: var(--accent);
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .sidebar-link.active::before {
+            width: 100%;
+        }
+
+        .sidebar-link.active::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+            animation: glow 2s infinite alternate;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        /* Page Container */
+        .page {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Page Header */
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            border-radius: 1rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.7s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
+            animation: rotate 30s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Section Styles */
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .section-icon {
+            font-size: 1.5rem;
+            color: var(--accent);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid var(--glass-border);
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(255, 0, 255, 0.1));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+            box-shadow: 0 10px 20px rgba(0, 212, 255, 0.2);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            color: var(--accent);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover .card-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .card-description {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tag {
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--accent);
+            padding: 0.2rem 0.6rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .tag:hover {
+            background: rgba(0, 212, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Button Styles */
+        .btn {
+            background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .btn:hover::before {
+            transform: translateX(0);
+        }
+
+        .btn:hover {
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-secondary::before {
+            display: none;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.9rem;
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid var(--glass-border);
+            padding: 3rem 2rem 2rem;
+            margin-top: 4rem;
+            margin-left: 250px;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-column h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--accent);
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-link {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-link a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .footer-link a::before {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        .footer-link a:hover::before {
+            width: 100%;
+        }
+
+        .footer-link a:hover {
+            color: var(--text-primary);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .social-link {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .social-link:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
+        }
+
+        /* Mobile Responsiveness */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .footer {
+                margin-left: 0;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .search-input {
+                width: 150px;
+            }
+
+            .search-input:focus {
+                width: 180px;
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Page Specific Styles */
+        /* Landing Page */
+        .hero {
+            padding: 80px 0;
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: typewriter 4s steps(40) 1s 1 normal both;
+            overflow: hidden;
+            white-space: nowrap;
+            border-right: 3px solid var(--accent);
+            width: fit-content;
+            margin: 0 auto 1.5rem;
+        }
+
+        @keyframes typewriter {
+            from {
+                width: 0;
+            }
+
+            to {
+                width: 100%;
+            }
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto 2rem;
+            line-height: 1.6;
+            animation: fadeIn 1.5s ease-out 0.5s both;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeIn 1.5s ease-out 1s both;
+        }
+
+        /* Z-Sports Page */
+        .filter-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 2rem;
+            padding: 0.5rem 1.2rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .filter-tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 100%;
+            background: rgba(0, 212, 255, 0.2);
+            transition: width 0.3s ease;
+            z-index: -1;
+        }
+
+        .filter-tab:hover::before {
+            width: 100%;
+        }
+
+        .filter-tab:hover,
+        .filter-tab.active {
+            background: rgba(0, 212, 255, 0.2);
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .price {
+            color: var(--accent-tertiary);
+            font-weight: 600;
+        }
+
+        .prize {
+            color: var(--accent-secondary);
+            font-weight: 600;
+        }
+
+        /* Hackathon Page */
+        .hackathon-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            justify-content: center;
+        }
+
+        .hackathon-carousel {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .hackathon-container {
+            display: flex;
+            transition: transform 0.5s ease;
+        }
+
+        .hackathon-card {
+            min-width: 350px;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid var(--glass-border);
+            padding: 1.5rem;
+            margin-right: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .hackathon-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+        }
+
+        .hackathon-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+        }
+
+        .hackathon-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .hackathon-organizer {
+            color: var(--text-dim);
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .hackathon-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .meta-item i {
+            color: var(--accent);
+        }
+
+        .hackathon-themes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .theme-tag {
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--accent);
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .carousel-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .carousel-btn {
+            background: var(--glass-bg);
+            border: none;
+            color: var(--text-primary);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .carousel-btn:hover {
+            background: var(--accent);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        /* Jobs Page */
+        .job-meta {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .job-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .job-meta-item i {
+            font-size: 0.75rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--radius-md);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-new {
+            background: var(--gradient-accent);
+            color: white;
+        }
+
+        .badge-featured {
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .badge-remote {
+            background: rgba(14, 165, 233, 0.15);
+            color: var(--accent);
+            border: 1px solid rgba(14, 165, 233, 0.3);
+        }
+
+        /* Mentorship Page */
+        .process-steps {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .step {
+            flex: 1 1 200px;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid var(--glass-border);
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .step:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+            box-shadow: 0 10px 20px rgba(0, 212, 255, 0.2);
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: var(--gradient);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 auto 1rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-number::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: rgba(0, 212, 255, 0.3);
+            z-index: -1;
+            animation: pulse 2s infinite;
+        }
+
+        .step h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.8rem;
+            color: var(--text-primary);
+        }
+
+        .step p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Testimonials */
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .testimonial-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid var(--glass-border);
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 212, 255, 0.2);
+        }
+
+        .testimonial-card::before {
+            content: '"';
+            position: absolute;
+            top: 10px;
+            left: 15px;
+            font-size: 4rem;
+            color: rgba(0, 212, 255, 0.1);
+            font-family: serif;
+        }
+
+        .testimonial-content {
+            margin-bottom: 1.5rem;
+            padding-left: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .testimonial-text {
+            color: var(--text-secondary);
+            font-style: italic;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .author-info h4 {
+            font-size: 1rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .author-info p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid var(--glass-border);
+            padding: 3rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            margin-top: 3rem;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
+            animation: rotate 30s linear infinite;
+        }
+
+        .cta-title {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .cta-description {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Notification Panel */
+        .notification-panel {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            width: 350px;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            display: none;
+            animation: slideInRight 0.3s ease;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .notification-panel.active {
+            display: block;
+        }
+
+        .notification-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .notification-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .notification-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+            transition: background 0.3s ease;
+        }
+
+        .notification-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-message {
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .notification-time {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Collaboration Room */
+        .collab-container {
+            display: flex;
+            height: calc(100vh - 200px);
+            gap: 1.5rem;
+        }
+
+        .collab-editor {
+            flex: 1;
+            background: var(--card-bg);
+            border-radius: 0.5rem;
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-header {
+            background: var(--glass-bg);
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .editor-title {
+            font-weight: 600;
+        }
+
+        .editor-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .editor-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.3rem;
+            border-radius: 0.3rem;
+            transition: all 0.3s ease;
+        }
+
+        .editor-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .code-editor {
+            flex: 1;
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            padding: 1rem;
+            overflow-y: auto;
+            line-height: 1.5;
+            tab-size: 4;
+        }
+
+        .collab-chat {
+            width: 350px;
+            background: var(--card-bg);
+            border-radius: 0.5rem;
+            border: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            background: var(--glass-bg);
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-title {
+            font-weight: 600;
+        }
+
+        .chat-users {
+            display: flex;
+            gap: 0.3rem;
+        }
+
+        .chat-user {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .chat-message {
+            margin-bottom: 1rem;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .chat-message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.3rem;
+        }
+
+        .chat-username {
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .chat-time {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .chat-text {
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+
+        .chat-input-container {
+            padding: 1rem;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .chat-input {
+            width: 100%;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 0.3rem;
+            padding: 0.7rem;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            resize: none;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        /* Floating Action Button */
+        .fab {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            color: white;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.4);
+            transition: all 0.3s ease;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.6);
+        }
+
+        .fab:active {
+            transform: scale(0.95);
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid var(--glass-border);
+            width: 90%;
+            max-width: 500px;
+            padding: 2rem;
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+        }
+
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 0.5rem;
+            padding: 0.8rem;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--secondary-bg);
+            color: var(--text-primary);
+            text-align: center;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            border: 1px solid var(--glass-border);
+        }
+
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Animations for elements */
+        .animate-fade-in {
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .animate-slide-up {
+            animation: slideUp 0.8s ease-out;
+        }
+
+        .animate-slide-down {
+            animation: slideDown 0.8s ease-out;
+        }
+
+        .animate-pulse {
+            animation: pulse 2s infinite;
+        }
+
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        /* Progress bar */
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--glass-bg);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+            border-radius: 3px;
+            width: 0;
+            transition: width 0.5s ease;
+        }
+
+        /* AI Mentorship Assistant Styles */
+        .ai-assistant-container {
+            max-width: 800px;
+            margin: 0 auto 2rem;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid var(--glass-border);
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .ai-assistant-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .ai-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .ai-info h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.3rem;
+            color: var(--text-primary);
+        }
+
+        .ai-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        .ai-conversation {
+            min-height: 300px;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            background: var(--glass-bg);
+            border-radius: 0.5rem;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+
+        .ai-message,
+        .user-message {
+            margin-bottom: 1.5rem;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .message-sender {
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .message-time {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .message-content {
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        .question-container {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: rgba(0, 212, 255, 0.05);
+            border-radius: 0.5rem;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .question-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .option {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .option:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: var(--accent);
+            transform: translateX(5px);
+        }
+
+        .option-letter {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .option-text {
+            flex: 1;
+        }
+
+        .ai-input-container {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .ai-input {
+            flex: 1;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 0.5rem;
+            padding: 0.8rem 1.2rem;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .ai-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .ai-send-btn {
+            background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.8rem 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .ai-send-btn:hover {
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .ai-send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Mentor Recommendation Styles */
+        .mentor-recommendations {
+            margin-top: 2rem;
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .mentor-recommendations.active {
+            display: block;
+        }
+
+        .recommendation-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .recommendation-title {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .recommendation-subtitle {
+            color: var(--text-secondary);
+        }
+
+        .mentor-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .mentor-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid var(--glass-border);
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .mentor-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(255, 0, 255, 0.1));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .mentor-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+            box-shadow: 0 10px 20px rgba(0, 212, 255, 0.2);
+        }
+
+        .mentor-card:hover::before {
+            opacity: 1;
+        }
+
+        .mentor-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .mentor-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .mentor-info h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.2rem;
+            color: var(--text-primary);
+        }
+
+        .mentor-title {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .mentor-bio {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .mentor-expertise {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .expertise-tag {
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--accent);
+            padding: 0.2rem 0.6rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+        }
+
+        .mentor-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .mentor-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .mentor-match-score {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes typing {
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .restart-assessment {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .restart-btn {
+            background: transparent;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            background: rgba(0, 212, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* ===================== NEW HOME PAGE STYLES ===================== */
+
+        /* New Hero Section Styles */
+        .hero-new {
+            padding: 80px 0 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            gap: 60px;
+        }
+
+        .hero-content {
+            flex: 1;
+            animation: fadeInLeft 1s ease-out;
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+            max-width: 500px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .hero-btn-primary,
+        .hero-btn-secondary {
+            padding: 0.8rem 2rem;
+            font-size: 1.1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .hero-btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .hero-visual {
+            flex: 1;
+            position: relative;
+            height: 400px;
+            animation: fadeInRight 1s ease-out;
+        }
+
+        .hero-card {
+            position: absolute;
+            width: 200px;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid var(--glass-border);
+            padding: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .hero-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-1 {
+            top: 20px;
+            right: 50px;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .card-2 {
+            top: 180px;
+            right: 120px;
+            animation: float 5s ease-in-out infinite;
+            animation-delay: 1s;
+        }
+
+        .card-3 {
+            top: 100px;
+            left: 20px;
+            animation: float 4.5s ease-in-out infinite;
+            animation-delay: 0.5s;
+        }
+
+        .hero-card .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .hero-card .card-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .code-line {
+            height: 8px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+            border-radius: 4px;
+            animation: pulse 2s infinite;
+        }
+
+        .code-line:nth-child(2) {
+            width: 80%;
+            animation-delay: 0.3s;
+        }
+
+        .code-line:nth-child(3) {
+            width: 60%;
+            animation-delay: 0.6s;
+        }
+
+        .chat-bubble {
+            height: 20px;
+            background: rgba(0, 212, 255, 0.2);
+            border-radius: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        .chat-bubble:nth-child(2) {
+            width: 70%;
+            animation-delay: 0.3s;
+        }
+
+        .chat-bubble:nth-child(3) {
+            width: 50%;
+            align-self: flex-end;
+            animation-delay: 0.6s;
+        }
+
+        .ranking-item {
+            height: 15px;
+            background: linear-gradient(90deg, var(--accent-tertiary), var(--accent));
+            border-radius: 7px;
+            animation: pulse 2s infinite;
+        }
+
+        .ranking-item:nth-child(2) {
+            width: 80%;
+            animation-delay: 0.3s;
+        }
+
+        .ranking-item:nth-child(3) {
+            width: 60%;
+            animation-delay: 0.6s;
+        }
+
+        /* Feature Highlights Section */
+        .features-section {
+            padding: 80px 0;
+            position: relative;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .section-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid var(--glass-border);
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            border-color: var(--accent);
+        }
+
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 1rem;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(255, 0, 255, 0.2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+            color: var(--accent);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: scale(1.1);
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.3), rgba(255, 0, 255, 0.3));
+        }
+
+        .feature-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .feature-description {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            flex-grow: 1;
+        }
+
+        /* Stats Section */
+        .stats-section {
+            padding: 60px 0;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .stats-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* How It Works Section */
+        .how-it-works-section {
+            padding: 80px 0;
+        }
+
+        .steps-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .step-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 2rem;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid var(--glass-border);
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .step-card:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border-color: var(--accent);
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex-grow: 1;
+        }
+
+        .step-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .step-description {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* New CTA Section */
+        .cta-section-new {
+            padding: 80px 0;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(255, 0, 255, 0.1));
+            border-radius: 1rem;
+            margin: 40px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-section-new::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
+            animation: rotate 30s linear infinite;
+        }
+
+        .cta-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .cta-description {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .cta-button {
+            padding: 1rem 2.5rem;
+            font-size: 1.2rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        /* Animations */
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Responsive Design for New Home Page */
+        @media (max-width: 768px) {
+            .hero-container {
+                flex-direction: column;
+                gap: 40px;
+            }
+
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .hero-visual {
+                height: 300px;
+            }
+
+            .hero-card {
+                width: 150px;
+                padding: 0.8rem;
+            }
+
+            .card-1 {
+                top: 10px;
+                right: 10px;
+            }
+
+            .card-2 {
+                top: 120px;
+                right: 60px;
+            }
+
+            .card-3 {
+                top: 60px;
+                left: 10px;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-container {
+                justify-content: center;
+            }
+
+            .step-card {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .step-card:hover {
+                transform: translateY(-10px);
+            }
+
+            .cta-section-new {
+                margin: 20px 10px;
+                padding: 60px 0;
+            }
+
+            .cta-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Preloader -->
+    <div class="preloader" id="preloader">
+        <div class="loader">
+            <div class="loader-circle"></div>
+            <div class="loader-circle"></div>
+            <div class="loader-circle"></div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <i class="fas fa-code"></i>
+            ZenCodr
+        </div>
+        <nav class="nav-links">
+            <a href="#" class="nav-link active" data-page="landing">Home</a>
+            <a href="#" class="nav-link" data-page="z-sports">Z-Sports</a>
+            <a href="#" class="nav-link" data-page="hackathon">Hackathon</a>
+            <a href="#" class="nav-link" data-page="jobs">Jobs</a>
+            <a href="#" class="nav-link" data-page="mentorship">Mentorship</a>
+            <a href="#" class="nav-link" data-page="collab">Collab Room</a>
+        </nav>
+        <div class="header-actions">
+            <div class="search-bar">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-input" placeholder="Search...">
+            </div>
+            <button class="notification-btn" id="notificationBtn">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge">3</span>
+            </button>
+            <div class="user-profile">
+                <button class="profile-btn" id="profileBtn">
+                    <div class="profile-avatar">U</div>
+                    <span>User</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="profile-dropdown" id="profileDropdown">
+                    <a href="#" class="dropdown-item">
+                        <i class="fas fa-user"></i>
+                        <span>My Profile</span>
+                    </a>
+                    <a href="#" class="dropdown-item">
+                        <i class="fas fa-trophy"></i>
+                        <span>My Achievements</span>
+                    </a>
+                    <a href="#" class="dropdown-item">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                    <a href="#" class="dropdown-item">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </div>
+            <button class="menu-toggle" id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Notification Panel -->
+    <div class="notification-panel" id="notificationPanel">
+        <div class="notification-header">
+            <h3 class="notification-title">Notifications</h3>
+            <button class="notification-close" id="notificationClose">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="notification-list">
+            <div class="notification-item">
+                <div class="notification-message">Your hackathon team has been matched!</div>
+                <div class="notification-time">10 minutes ago</div>
+            </div>
+            <div class="notification-item">
+                <div class="notification-message">New mentorship opportunity available</div>
+                <div class="notification-time">1 hour ago</div>
+            </div>
+            <div class="notification-item">
+                <div class="notification-message">Your code submission was approved</div>
+                <div class="notification-time">3 hours ago</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <i class="fas fa-code"></i> ZenCodr
+            </div>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link active" data-page="landing">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link" data-page="z-sports">
+                    <i class="fas fa-gamepad"></i>
+                    <span>Z-Sports</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link" data-page="hackathon">
+                    <i class="fas fa-rocket"></i>
+                    <span>Hackathon</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link" data-page="jobs">
+                    <i class="fas fa-briefcase"></i>
+                    <span>Jobs</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link" data-page="mentorship">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <span>Mentorship</span>
+                </a>
+            </li>
+            <li class="sidebar-item">
+                <a href="#" class="sidebar-link" data-page="collab">
+                    <i class="fas fa-users"></i>
+                    <span>Collab Room</span>
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Landing Page (Redesigned) -->
+        <div id="landing" class="page active">
+            <!-- New Hero Section -->
+            <section class="hero-new">
+                <div class="hero-container">
+                    <div class="hero-content">
+                        <h1 class="hero-title">Code. Collaborate. Compete. Grow.</h1>
+                        <p class="hero-subtitle">ZenCodr is an all-in-one platform for collaborative coding, hackathons,
+                            mentorship, jobs, and competitive learning.</p>
+                        <div class="hero-buttons">
+                            <a href="#" class="btn hero-btn-primary" id="startCodingBtn">Start Coding</a>
+                            <a href="#" class="btn btn-secondary hero-btn-secondary" id="exploreFeaturesBtn">Explore
+                                Features</a>
+                        </div>
+                    </div>
+                    <div class="hero-visual">
+                        <div class="hero-card card-1">
+                            <div class="card-header">
+                                <i class="fas fa-code"></i>
+                                <span>Live Editor</span>
+                            </div>
+                            <div class="card-content">
+                                <div class="code-line"></div>
+                                <div class="code-line"></div>
+                                <div class="code-line"></div>
+                            </div>
+                        </div>
+                        <div class="hero-card card-2">
+                            <div class="card-header">
+                                <i class="fas fa-users"></i>
+                                <span>Team Chat</span>
+                            </div>
+                            <div class="card-content">
+                                <div class="chat-bubble"></div>
+                                <div class="chat-bubble"></div>
+                                <div class="chat-bubble"></div>
+                            </div>
+                        </div>
+                        <div class="hero-card card-3">
+                            <div class="card-header">
+                                <i class="fas fa-trophy"></i>
+                                <span>Compete</span>
+                            </div>
+                            <div class="card-content">
+                                <div class="ranking-item"></div>
+                                <div class="ranking-item"></div>
+                                <div class="ranking-item"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Feature Highlights Section -->
+            <section class="features-section">
+                <div class="section-header">
+                    <h2 class="section-title">Everything You Need to Excel</h2>
+                    <p class="section-subtitle">Powerful features designed to accelerate your coding journey</p>
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <h3 class="feature-title">Real-time Code Collaboration</h3>
+                        <p class="feature-description">Code together with your team in real-time. Share, edit, and debug
+                            code collaboratively with integrated communication tools.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-rocket"></i>
+                        </div>
+                        <h3 class="feature-title">Hackathons & Competitions</h3>
+                        <p class="feature-description">Test your skills in exciting coding challenges and win prizes.
+                            Join hackathons hosted by top companies and universities.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <h3 class="feature-title">AI-Powered Mentorship</h3>
+                        <p class="feature-description">Get personalized guidance from experienced mentors. Our AI
+                            matches you with the perfect mentor based on your goals.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <h3 class="feature-title">Jobs & Internships</h3>
+                        <p class="feature-description">Discover exciting career opportunities. Get matched with top tech
+                            companies looking for developers with your skills.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stats / Trust Section -->
+            <section class="stats-section">
+                <div class="stats-container">
+                    <div class="stat-item">
+                        <div class="stat-number" data-target="10000">0</div>
+                        <div class="stat-label">Developers</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" data-target="500">0</div>
+                        <div class="stat-label">Hackathons</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" data-target="200">0</div>
+                        <div class="stat-label">Mentors</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" data-target="1000">0</div>
+                        <div class="stat-label">Jobs</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- How It Works Section -->
+            <section class="how-it-works-section">
+                <div class="section-header">
+                    <h2 class="section-title">How ZenCodr Works</h2>
+                    <p class="section-subtitle">Start your journey in three simple steps</p>
+                </div>
+                <div class="steps-container">
+                    <div class="step-card">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3 class="step-title">Create / Join Room</h3>
+                            <p class="step-description">Set up your profile and either create a new coding room or join
+                                an existing one to start collaborating.</p>
+                        </div>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3 class="step-title">Collaborate & Learn</h3>
+                            <p class="step-description">Code together in real-time, participate in hackathons, and get
+                                guidance from experienced mentors.</p>
+                        </div>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3 class="step-title">Compete & Get Hired</h3>
+                            <p class="step-description">Showcase your skills in competitions, build your portfolio, and
+                                connect with top tech companies.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Call-to-Action Section -->
+            <section class="cta-section-new">
+                <div class="cta-container">
+                    <h2 class="cta-title">Ready to level up your coding journey?</h2>
+                    <p class="cta-description">Join thousands of developers who are already collaborating, learning, and
+                        growing with ZenCodr.</p>
+                    <a href="#" class="btn cta-button">Join ZenCodr Now</a>
+                </div>
+            </section>
+        </div>
+
+        <!-- Z-Sports Page -->
+        <div id="z-sports" class="page">
+            <div class="page-header">
+                <h1 class="page-title">Welcome to Z-Sports — The Gaming Arena for Coders!</h1>
+                <p class="page-subtitle">Play. Learn. Compete. Win rewards and master your tech skills.</p>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="filter-tabs">
+                <button class="filter-tab active" data-filter="all">All Games</button>
+                <button class="filter-tab" data-filter="free">Free Games</button>
+                <button class="filter-tab" data-filter="paid">Paid Games</button>
+                <button class="filter-tab" data-filter="prize">High Prize Pool</button>
+            </div>
+
+            <!-- Free Games Section -->
+            <section class="section">
+                <div class="section-header">
+                    <i class="fas fa-gamepad section-icon"></i>
+                    <h2 class="section-title">Free Z Games</h2>
+                </div>
+                <div class="cards-grid">
+                    <div class="card" data-game-type="free">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Python Challenge</h3>
+                            </div>
+                            <i class="fab fa-python card-icon"></i>
+                        </div>
+                        <p class="card-description">Solve logic puzzles to sharpen your Python skills.</p>
+                        <div class="card-tags">
+                            <span class="tag">#Python</span>
+                            <span class="tag">#Beginner</span>
+                        </div>
+                        <div class="card-footer">
+                            <button class="btn join-game-btn">Join Now</button>
+                        </div>
+                    </div>
+                    <div class="card" data-game-type="free">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">HTML Arena</h3>
+                            </div>
+                            <i class="fab fa-html5 card-icon"></i>
+                        </div>
+                        <p class="card-description">Design layouts under a time limit.</p>
+                        <div class="card-tags">
+                            <span class="tag">#HTML</span>
+                            <span class="tag">#CSS</span>
+                            <span class="tag">#Beginner</span>
+                        </div>
+                        <div class="card-footer">
+                            <button class="btn join-game-btn">Join Now</button>
+                        </div>
+                    </div>
+                    <div class="card" data-game-type="free">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">JS Battlefield</h3>
+                            </div>
+                            <i class="fab fa-js-square card-icon"></i>
+                        </div>
+                        <p class="card-description">Test your JavaScript logic in fun missions.</p>
+                        <div class="card-tags">
+                            <span class="tag">#JavaScript</span>
+                            <span class="tag">#Intermediate</span>
+                        </div>
+                        <div class="card-footer">
+                            <button class="btn join-game-btn">Join Now</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Paid Games Section -->
+            <section class="section">
+                <div class="section-header">
+                    <i class="fas fa-coins section-icon"></i>
+                    <h2 class="section-title">Paid Z Games</h2>
+                </div>
+                <div class="cards-grid">
+                    <div class="card" data-game-type="paid" data-fee="199">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Web Dev Wars</h3>
+                            </div>
+                            <i class="fas fa-laptop-code card-icon"></i>
+                        </div>
+                        <p class="card-description">Build and deploy a small website in 60 minutes.</p>
+                        <div class="card-tags">
+                            <span class="tag">#WebDev</span>
+                            <span class="tag">#FullStack</span>
+                        </div>
+                        <div class="card-footer">
+                            <span class="price">Entry Fee: ₹199</span>
+                            <button class="btn join-game-btn">Join Game</button>
+                        </div>
+                    </div>
+                    <div class="card" data-game-type="paid" data-fee="299">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">App Forge Arena</h3>
+                            </div>
+                            <i class="fas fa-mobile-alt card-icon"></i>
+                        </div>
+                        <p class="card-description">Compete to create fast, functional apps.</p>
+                        <div class="card-tags">
+                            <span class="tag">#Mobile</span>
+                            <span class="tag">#ReactNative</span>
+                        </div>
+                        <div class="card-footer">
+                            <span class="price">Entry Fee: ₹299</span>
+                            <button class="btn join-game-btn">Join Game</button>
+                        </div>
+                    </div>
+                    <div class="card" data-game-type="paid" data-fee="299">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">AI Quest</h3>
+                            </div>
+                            <i class="fas fa-brain card-icon"></i>
+                        </div>
+                        <p class="card-description">Machine learning challenges for tech enthusiasts.</p>
+                        <div class="card-tags">
+                            <span class="tag">#AI</span>
+                            <span class="tag">#ML</span>
+                            <span class="tag">#Python</span>
+                        </div>
+                        <div class="card-footer">
+                            <span class="price">Entry Fee: ₹299</span>
+                            <button class="btn join-game-btn">Join Game</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- High Prize Pool Games Section -->
+            <section class="section">
+                <div class="section-header">
+                    <i class="fas fa-trophy section-icon"></i>
+                    <h2 class="section-title">High Prize Pool Games</h2>
+                </div>
+                <div class="cards-grid">
+                    <div class="card" data-game-type="prize" data-fee="499" data-prize="5000">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Z-Hack Elite (Python Pro)</h3>
+                            </div>
+                            <i class="fas fa-shield-alt card-icon"></i>
+                        </div>
+                        <p class="card-description">Automation & advanced logic battle.</p>
+                        <div class="card-tags">
+                            <span class="tag">#Python</span>
+                            <span class="tag">#Advanced</span>
+                        </div>
+                        <div class="card-footer">
+                            <span class="prize">Prize Pool: ₹5,000 – ₹10,000+</span>
+                            <button class="btn join-game-btn">Join Now</button>
+                        </div>
+                    </div>
+                    <div class="card" data-game-type="prize" data-fee="499" data-prize="5000">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Web Master Showdown</h3>
+                            </div>
+                            <i class="fas fa-code-branch card-icon"></i>
+                        </div>
+                        <p class="card-description">Full-stack timed project challenge.</p>
+                        <div class="card-tags">
+                            <span class="tag">#FullStack</span>
+                            <span class="tag">#MERN</span>
+                        </div>
+                        <div class="card-footer">
+                            <span class="prize">Prize Pool: ₹5,000 – ₹10,000+</span>
+                            <button class="btn join-game-btn">Join Now</button>
+                        </div>
+                    </div>
+                    <div class="card" data-game-type="prize" data-fee="999" data-prize="10000">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">AI Storm Championship</h3>
+                            </div>
+                            <i class="fas fa-robot card-icon"></i>
+                        </div>
+                        <p class="card-description">Build ML models to climb the leaderboard.</p>
+                        <div class="card-tags">
+                            <span class="tag">#AI</span>
+                            <span class="tag">#ML</span>
+                            <span class="tag">#Advanced</span>
+                        </div>
+                        <div class="card-footer">
+                            <span class="prize">Prize Pool: ₹10,000+</span>
+                            <button class="btn coming-soon">Coming Soon</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Hackathon Page -->
+        <div id="hackathon" class="page">
+            <div class="page-header">
+                <h1 class="page-title">ZENCODR Hackathon Hub</h1>
+                <p class="page-subtitle">Explore upcoming hackathons, compete, innovate, and build the future together.
+                </p>
+            </div>
+
+            <!-- Upcoming Hackathons Section -->
+            <section class="section">
+                <div class="section-header">
+                    <i class="fas fa-rocket section-icon"></i>
+                    <h2 class="section-title">Upcoming Hackathons</h2>
+                </div>
+
+                <div class="hackathon-filters">
+                    <button class="filter-tab active" data-filter="all">All</button>
+                    <button class="filter-tab" data-filter="online">Online</button>
+                    <button class="filter-tab" data-filter="offline">Offline</button>
+                    <button class="filter-tab" data-filter="hybrid">Hybrid</button>
+                    <button class="filter-tab" data-filter="beginner">Beginner</button>
+                    <button class="filter-tab" data-filter="intermediate">Intermediate</button>
+                    <button class="filter-tab" data-filter="advanced">Advanced</button>
+                </div>
+
+                <div class="hackathon-carousel">
+                    <div class="hackathon-container">
+                        <!-- Hackathon Card 1 -->
+                        <div class="hackathon-card" data-mode="online" data-difficulty="intermediate">
+                            <h3 class="hackathon-title">AI Innovation Challenge</h3>
+                            <p class="hackathon-organizer">TechCorp India</p>
+                            <div class="hackathon-meta">
+                                <div class="meta-item">
+                                    <i class="fas fa-calendar"></i>
+                                    <span>Oct 15-17, 2023</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="fas fa-globe"></i>
+                                    <span>Online</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="fas fa-trophy"></i>
+                                    <span>₹8,30,000</span>
+                                </div>
+                            </div>
+                            <div class="hackathon-themes">
+                                <span class="theme-tag">AI</span>
+                                <span class="theme-tag">Machine Learning</span>
+                                <span class="theme-tag">Open Innovation</span>
+                            </div>
+                            <div class="hackathon-actions">
+                                <button class="btn btn-sm view-details">View Details</button>
+                                <button class="btn btn-secondary btn-sm register-btn">Register</button>
+                            </div>
+                        </div>
+
+                        <!-- Hackathon Card 2 -->
+                        <div class="hackathon-card" data-mode="offline" data-difficulty="beginner">
+                            <h3 class="hackathon-title">Web3 Builders Weekend</h3>
+                            <p class="hackathon-organizer">Blockchain Academy</p>
+                            <div class="hackathon-meta">
+                                <div class="meta-item">
+                                    <i class="fas fa-calendar"></i>
+                                    <span>Nov 5-6, 2023</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>Bangalore</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="fas fa-trophy"></i>
+                                    <span>₹5,00,000</span>
+                                </div>
+                            </div>
+                            <div class="hackathon-themes">
+                                <span class="theme-tag">Web3</span>
+                                <span class="theme-tag">Blockchain</span>
+                                <span class="theme-tag">DeFi</span>
+                            </div>
+                            <div class="hackathon-actions">
+                                <button class="btn btn-sm view-details">View Details</button>
+                                <button class="btn btn-secondary btn-sm register-btn">Register</button>
+                            </div>
+                        </div>
+
+                        <!-- Hackathon Card 3 -->
+                        <div class="hackathon-card" data-mode="hybrid" data-difficulty="advanced">
+                            <h3 class="hackathon-title">Sustainability Hack</h3>
+                            <p class="hackathon-organizer">GreenTech Initiative</p>
+                            <div class="hackathon-meta">
+                                <div class="meta-item">
+                                    <i class="fas fa-calendar"></i>
+                                    <span>Nov 18-20, 2023</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="fas fa-sync-alt"></i>
+                                    <span>Hybrid</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="fas fa-trophy"></i>
+                                    <span>₹12,50,000</span>
+                                </div>
+                            </div>
+                            <div class="hackathon-themes">
+                                <span class="theme-tag">Sustainability</span>
+                                <span class="theme-tag">Climate Tech</span>
+                                <span class="theme-tag">IoT</span>
+                            </div>
+                            <div class="hackathon-actions">
+                                <button class="btn btn-sm view-details">View Details</button>
+                                <button class="btn btn-secondary btn-sm register-btn">Register</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="carousel-controls">
+                    <button class="carousel-btn" id="prevHackathon">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="carousel-btn" id="nextHackathon">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Hackathon Preparation Resources -->
+            <section class="section">
+                <div class="section-header">
+                    <i class="fas fa-book section-icon"></i>
+                    <h2 class="section-title">Hackathon Preparation Resources</h2>
+                </div>
+
+                <div class="cards-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">How to Form a Winning Team</h3>
+                            </div>
+                            <i class="fas fa-users card-icon"></i>
+                        </div>
+                        <p class="card-description">Learn the secrets to assembling a balanced team with complementary
+                            skills for hackathon success.</p>
+                        <a href="#" class="btn btn-secondary btn-sm">Read Article</a>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">How to Pitch Your Idea</h3>
+                            </div>
+                            <i class="fas fa-presentation card-icon"></i>
+                        </div>
+                        <p class="card-description">Master the art of presenting your hackathon project to judges with
+                            confidence and clarity.</p>
+                        <a href="#" class="btn btn-secondary btn-sm">Read Article</a>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Best Tools to Use in Hackathons</h3>
+                            </div>
+                            <i class="fas fa-tools card-icon"></i>
+                        </div>
+                        <p class="card-description">Discover the essential tools, frameworks, and platforms that can
+                            help you build faster and better.</p>
+                        <a href="#" class="btn btn-secondary btn-sm">Read Article</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Jobs Page -->
+        <div id="jobs" class="page">
+            <div class="page-header">
+                <h1 class="page-title">Jobs & Careers</h1>
+                <p class="page-subtitle">Build the future of competitive programming. Work remotely, compete globally,
+                    and grow with a team that values your passion for coding.</p>
+            </div>
+
+            <!-- Open Positions Section -->
+            <section class="section">
+                <div class="section-header">
+                    <i class="fas fa-briefcase section-icon"></i>
+                    <h2 class="section-title">Open Positions</h2>
+                </div>
+                <div class="cards-grid">
+                    <!-- Job Card 1 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Senior Full-Stack Engineer</h3>
+                                <span class="badge badge-new">New</span>
+                                <span class="badge badge-remote">Remote</span>
+                            </div>
+                        </div>
+                        <div class="job-meta">
+                            <div class="job-meta-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>Remote - Global</span>
+                            </div>
+                            <div class="job-meta-item">
+                                <i class="fas fa-briefcase"></i>
+                                <span>Full-time</span>
+                            </div>
+                            <div class="job-meta-item">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Senior Level</span>
+                            </div>
+                        </div>
+                        <p class="card-description">Build our platform services, developer tooling, and real-time match
+                            systems. Work with cutting-edge technologies and shape the future of competitive
+                            programming.</p>
+                        <div class="card-tags">
+                            <span class="tag">Node.js</span>
+                            <span class="tag">React</span>
+                            <span class="tag">Postgres</span>
+                            <span class="tag">Real-time</span>
+                        </div>
+                        <div class="card-footer">
+                            <a href="#" class="btn btn-sm">Apply Now</a>
+                            <a href="#" class="btn btn-secondary btn-sm">Learn More</a>
+                        </div>
+                    </div>
+
+                    <!-- Job Card 2 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Esports Product Lead</h3>
+                                <span class="badge badge-featured">Featured</span>
+                                <span class="badge badge-remote">Remote</span>
+                            </div>
+                        </div>
+                        <div class="job-meta">
+                            <div class="job-meta-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>Remote - EMEA/Americas</span>
+                            </div>
+                            <div class="job-meta-item">
+                                <i class="fas fa-briefcase"></i>
+                                <span>Full-time</span>
+                            </div>
+                            <div class="job-meta-item">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Mid-Senior Level</span>
+                            </div>
+                        </div>
+                        <p class="card-description">Design competitive formats, spectator features, and tournament
+                            operations. Lead the product strategy for our esports platform and create engaging
+                            experiences.</p>
+                        <div class="card-tags">
+                            <span class="tag">Product Strategy</span>
+                            <span class="tag">Esports</span>
+                            <span class="tag">Community</span>
+                            <span class="tag">Analytics</span>
+                        </div>
+                        <div class="card-footer">
+                            <a href="#" class="btn btn-sm">Apply Now</a>
+                            <a href="#" class="btn btn-secondary btn-sm">Learn More</a>
+                        </div>
+                    </div>
+
+                    <!-- Job Card 3 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Community Engineer</h3>
+                                <span class="badge badge-remote">Remote</span>
+                            </div>
+                        </div>
+                        <div class="job-meta">
+                            <div class="job-meta-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>Remote - APAC</span>
+                            </div>
+                            <div class="job-meta-item">
+                                <i class="fas fa-briefcase"></i>
+                                <span>Contract</span>
+                            </div>
+                            <div class="job-meta-item">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Mid Level</span>
+                            </div>
+                        </div>
+                        <p class="card-description">Own SDKs, examples, and do livestream coding sessions during events.
+                            Create educational content and build bridges between our platform and the developer
+                            community.</p>
+                        <div class="card-tags">
+                            <span class="tag">SDK Development</span>
+                            <span class="tag">Documentation</span>
+                            <span class="tag">Streaming</span>
+                            <span class="tag">Community</span>
+                        </div>
+                        <div class="card-footer">
+                            <a href="#" class="btn btn-sm">Apply Now</a>
+                            <a href="#" class="btn btn-secondary btn-sm">Learn More</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Benefits Section -->
+            <section class="section">
+                <div class="section-header">
+                    <i class="fas fa-star section-icon"></i>
+                    <h2 class="section-title">Why Join Our Team?</h2>
+                </div>
+                <div class="cards-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Remote-First Culture</h3>
+                            </div>
+                            <i class="fas fa-globe card-icon"></i>
+                        </div>
+                        <p class="card-description">Work from anywhere with flexible hours that fit your lifestyle. We
+                            trust our team to deliver great work regardless of location.</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Competitive Programming</h3>
+                            </div>
+                            <i class="fas fa-trophy card-icon"></i>
+                        </div>
+                        <p class="card-description">Compete in tournaments, stream matches, and earn recognition. Your
+                            competitive programming skills can translate to career opportunities.</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Career Growth</h3>
+                            </div>
+                            <i class="fas fa-rocket card-icon"></i>
+                        </div>
+                        <p class="card-description">Clear career paths, mentorship programs, and continuous learning
+                            opportunities. We invest in your professional development.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Mentorship Page with AI Assistant -->
+        <div id="mentorship" class="page">
+            <div class="page-header">
+                <h1 class="page-title">Learn, Grow & Code with Expert Mentors</h1>
+                <p class="page-subtitle">Get personalized guidance from industry leaders, coding experts, and
+                    innovators.</p>
+            </div>
+
+            <!-- AI Mentorship Assistant -->
+            <div class="ai-assistant-container" id="aiAssistant">
+                <div class="ai-assistant-header">
+                    <div class="ai-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="ai-info">
+                        <h3>ZenCodr AI Assistant</h3>
+                        <div class="ai-status">
+                            <div class="status-indicator"></div>
+                            <span>Online and ready to help</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ai-conversation" id="aiConversation">
+                    <!-- Initial AI message will be inserted here -->
+                </div>
+
+                <div class="question-container" id="questionContainer" style="display: none;">
+                    <!-- Questions will be inserted here -->
+                </div>
+
+                <div class="ai-input-container" id="aiInputContainer" style="display: none;">
+                    <input type="text" class="ai-input" id="aiInput" placeholder="Type your message...">
+                    <button class="ai-send-btn" id="aiSendBtn">Send</button>
+                </div>
+            </div>
+
+            <!-- Mentor Recommendations (initially hidden) -->
+            <div class="mentor-recommendations" id="mentorRecommendations">
+                <div class="recommendation-header">
+                    <h2 class="recommendation-title">Your Personalized Mentor Matches</h2>
+                    <p class="recommendation-subtitle">Based on your preferences, we've found the perfect mentors for
+                        you</p>
+                </div>
+
+                <div class="mentor-cards" id="mentorCards">
+                    <!-- Mentor cards will be inserted here based on user profile -->
+                </div>
+
+                <div class="restart-assessment">
+                    <button class="restart-btn" id="restartAssessment">Retake Assessment</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collab Room Page -->
+        <div id="collab" class="page">
+            <div class="page-header">
+                <h1 class="page-title">Collaborative Coding Room</h1>
+                <p class="page-subtitle">Code together in real-time with integrated chat and video conferencing.</p>
+            </div>
+
+            <div class="collab-container">
+                <div class="collab-editor">
+                    <div class="editor-header">
+                        <div class="editor-title">JavaScript Project</div>
+                        <div class="editor-actions">
+                            <button class="editor-btn tooltip">
+                                <i class="fas fa-save"></i>
+                                <span class="tooltip-text">Save</span>
+                            </button>
+                            <button class="editor-btn tooltip">
+                                <i class="fas fa-play"></i>
+                                <span class="tooltip-text">Run</span>
+                            </button>
+                            <button class="editor-btn tooltip">
+                                <i class="fas fa-share-alt"></i>
+                                <span class="tooltip-text">Share</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="code-editor" contenteditable="true" id="codeEditor">
+                        // Welcome to ZenCodr Collaborative Editor
+                        // Start coding together with your team
+
+                        function helloWorld() {
+                        console.log("Hello, ZenCodr!");
+                        }
+
+                        helloWorld();
+                    </div>
+                </div>
+
+                <div class="collab-chat">
+                    <div class="chat-header">
+                        <div class="chat-title">Team Chat</div>
+                        <div class="chat-users">
+                            <div class="chat-user">U</div>
+                            <div class="chat-user">A</div>
+                            <div class="chat-user">M</div>
+                        </div>
+                    </div>
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="chat-message">
+                            <div class="chat-message-header">
+                                <span class="chat-username">Alex</span>
+                                <span class="chat-time">10:30 AM</span>
+                            </div>
+                            <div class="chat-text">Hey everyone! Ready to start coding?</div>
+                        </div>
+                        <div class="chat-message">
+                            <div class="chat-message-header">
+                                <span class="chat-username">Maya</span>
+                                <span class="chat-time">10:31 AM</span>
+                            </div>
+                            <div class="chat-text">Yes! I've set up the project structure.</div>
+                        </div>
+                        <div class="chat-message">
+                            <div class="chat-message-header">
+                                <span class="chat-username">You</span>
+                                <span class="chat-time">10:32 AM</span>
+                            </div>
+                            <div class="chat-text">Great! I'll work on the frontend components.</div>
+                        </div>
+                    </div>
+                    <div class="chat-input-container">
+                        <textarea class="chat-input" id="chatInput" placeholder="Type your message..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Floating Action Button -->
+    <button class="fab" id="fabBtn">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Modal Title</h3>
+                <button class="modal-close" id="modalClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Modal content will be inserted here -->
+            </div>
+            <div class="modal-footer" id="modalFooter">
+                <!-- Modal footer will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-column">
+                <h3>ZenCodr</h3>
+                <p>The ultimate platform for collaborative coding, mentorship, and career growth.</p>
+                <div class="social-links">
+                    <a href="#" class="social-link">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="social-link">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="#" class="social-link">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                    <a href="#" class="social-link">
+                        <i class="fab fa-discord"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h3>Navigation</h3>
+                <ul class="footer-links">
+                    <li class="footer-link"><a href="#" data-page="landing">Home</a></li>
+                    <li class="footer-link"><a href="#" data-page="z-sports">Z-Sports</a></li>
+                    <li class="footer-link"><a href="#" data-page="hackathon">Hackathon</a></li>
+                    <li class="footer-link"><a href="#" data-page="jobs">Jobs</a></li>
+                    <li class="footer-link"><a href="#" data-page="mentorship">Mentorship</a></li>
+                    <li class="footer-link"><a href="#" data-page="collab">Collab Room</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Resources</h3>
+                <ul class="footer-links">
+                    <li class="footer-link"><a href="#">Documentation</a></li>
+                    <li class="footer-link"><a href="#">Tutorials</a></li>
+                    <li class="footer-link"><a href="#">Blog</a></li>
+                    <li class="footer-link"><a href="#">Community</a></li>
+                    <li class="footer-link"><a href="#">Support</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Legal</h3>
+                <ul class="footer-links">
+                    <li class="footer-link"><a href="#">Terms of Service</a></li>
+                    <li class="footer-link"><a href="#">Privacy Policy</a></li>
+                    <li class="footer-link"><a href="#">Cookie Policy</a></li>
+                    <li class="footer-link"><a href="#">Code of Conduct</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2023 ZenCodr. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // DOM elements
+        const preloader = document.getElementById('preloader');
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const profileBtn = document.getElementById('profileBtn');
+        const profileDropdown = document.getElementById('profileDropdown');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const sidebarLinks = document.querySelectorAll('.sidebar-link');
+        const footerLinks = document.querySelectorAll('.footer-link a[data-page]');
+        const pages = document.querySelectorAll('.page');
+        const notificationBtn = document.getElementById('notificationBtn');
+        const notificationPanel = document.getElementById('notificationPanel');
+        const notificationClose = document.getElementById('notificationClose');
+        const fabBtn = document.getElementById('fabBtn');
+        const modal = document.getElementById('modal');
+        const modalClose = document.getElementById('modalClose');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+        const modalFooter = document.getElementById('modalFooter');
+        const chatInput = document.getElementById('chatInput');
+        const chatMessages = document.getElementById('chatMessages');
+
+        // AI Mentorship Assistant elements
+        const aiConversation = document.getElementById('aiConversation');
+        const questionContainer = document.getElementById('questionContainer');
+        const aiInputContainer = document.getElementById('aiInputContainer');
+        const aiInput = document.getElementById('aiInput');
+        const aiSendBtn = document.getElementById('aiSendBtn');
+        const mentorRecommendations = document.getElementById('mentorRecommendations');
+        const mentorCards = document.getElementById('mentorCards');
+        const restartAssessment = document.getElementById('restartAssessment');
+
+        // Hide preloader when page is loaded
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                preloader.classList.add('hidden');
+
+                // Initialize AI Mentorship Assistant if on mentorship page
+                if (document.getElementById('mentorship').classList.contains('active')) {
+                    initializeAIMentorship();
+                }
+
+                // Initialize animated counters for stats section
+                initializeCounters();
+            }, 1000);
+        });
+
+        // Mobile menu toggle
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+        });
+
+        // Profile dropdown toggle
+        profileBtn.addEventListener('click', () => {
+            profileDropdown.classList.toggle('active');
+        });
+
+        // Notification panel toggle
+        notificationBtn.addEventListener('click', () => {
+            notificationPanel.classList.toggle('active');
+        });
+
+        notificationClose.addEventListener('click', () => {
+            notificationPanel.classList.remove('active');
+        });
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!profileBtn.contains(e.target) && !profileDropdown.contains(e.target)) {
+                profileDropdown.classList.remove('active');
+            }
+
+            if (!notificationBtn.contains(e.target) && !notificationPanel.contains(e.target)) {
+                notificationPanel.classList.remove('active');
+            }
+        });
+
+        // Navigation functionality
+        function showPage(pageId) {
+            // Hide all pages
+            pages.forEach(page => {
+                page.classList.remove('active');
+            });
+
+            // Show selected page
+            document.getElementById(pageId).classList.add('active');
+
+            // Update active nav link
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('data-page') === pageId) {
+                    link.classList.add('active');
+                }
+            });
+
+            // Update active sidebar link
+            sidebarLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('data-page') === pageId) {
+                    link.classList.add('active');
+                }
+            });
+
+            // Close mobile menu if open
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('active');
+            }
+
+            // Initialize AI Mentorship Assistant if on mentorship page
+            if (pageId === 'mentorship') {
+                initializeAIMentorship();
+            }
+
+            // Reinitialize counters if landing page
+            if (pageId === 'landing') {
+                initializeCounters();
+            }
+        }
+
+        // Add event listeners to navigation links
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                const pageId = link.getAttribute('data-page');
+                if (pageId) {
+                    e.preventDefault();
+                    showPage(pageId);
+                }
+            });
+        });
+
+        // Add event listeners to sidebar links
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                const pageId = link.getAttribute('data-page');
+                if (pageId) {
+                    e.preventDefault();
+                    showPage(pageId);
+                }
+            });
+        });
+
+        // Add event listeners to footer links
+        footerLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const pageId = link.getAttribute('data-page');
+                if (pageId) {
+                    showPage(pageId);
+                }
+            });
+        });
+
+        // Z-Sports filter functionality
+        const zSportsFilterTabs = document.querySelectorAll('#z-sports .filter-tab');
+        const zSportsCards = document.querySelectorAll('#z-sports .card');
+
+        zSportsFilterTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Update active tab
+                zSportsFilterTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                const filter = tab.getAttribute('data-filter');
+
+                // Filter cards
+                zSportsCards.forEach(card => {
+                    if (filter === 'all') {
+                        card.style.display = 'block';
+                        setTimeout(() => {
+                            card.style.opacity = '1';
+                            card.style.transform = 'translateY(0)';
+                        }, 10);
+                    } else {
+                        const gameType = card.getAttribute('data-game-type');
+                        if (gameType === filter) {
+                            card.style.display = 'block';
+                            setTimeout(() => {
+                                card.style.opacity = '1';
+                                card.style.transform = 'translateY(0)';
+                            }, 10);
+                        } else {
+                            card.style.opacity = '0';
+                            card.style.transform = 'translateY(20px)';
+                            setTimeout(() => {
+                                card.style.display = 'none';
+                            }, 300);
+                        }
+                    }
+                });
+            });
+        });
+
+        // Hackathon filter functionality
+        const hackathonFilterTabs = document.querySelectorAll('#hackathon .filter-tab');
+        const hackathonCards = document.querySelectorAll('#hackathon .hackathon-card');
+
+        hackathonFilterTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Update active tab
+                hackathonFilterTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                const filter = tab.getAttribute('data-filter');
+
+                // Filter cards
+                hackathonCards.forEach(card => {
+                    if (filter === 'all') {
+                        card.style.display = 'block';
+                        setTimeout(() => {
+                            card.style.opacity = '1';
+                            card.style.transform = 'translateY(0)';
+                        }, 10);
+                    } else {
+                        const mode = card.getAttribute('data-mode');
+                        const difficulty = card.getAttribute('data-difficulty');
+
+                        if (mode === filter || difficulty === filter) {
+                            card.style.display = 'block';
+                            setTimeout(() => {
+                                card.style.opacity = '1';
+                                card.style.transform = 'translateY(0)';
+                            }, 10);
+                        } else {
+                            card.style.opacity = '0';
+                            card.style.transform = 'translateY(20px)';
+                            setTimeout(() => {
+                                card.style.display = 'none';
+                            }, 300);
+                        }
+                    }
+                });
+            });
+        });
+
+        // Hackathon carousel functionality
+        const hackathonContainer = document.querySelector('#hackathon .hackathon-container');
+        const prevHackathonBtn = document.getElementById('prevHackathon');
+        const nextHackathonBtn = document.getElementById('nextHackathon');
+        let hackathonSlidePosition = 0;
+        const hackathonSlideWidth = 366; // Card width + margin
+
+        prevHackathonBtn.addEventListener('click', () => {
+            if (hackathonSlidePosition > 0) {
+                hackathonSlidePosition -= hackathonSlideWidth;
+                hackathonContainer.style.transform = `translateX(-${hackathonSlidePosition}px)`;
+            }
+        });
+
+        nextHackathonBtn.addEventListener('click', () => {
+            const maxSlide = (hackathonContainer.children.length - 3) * hackathonSlideWidth;
+            if (hackathonSlidePosition < maxSlide) {
+                hackathonSlidePosition += hackathonSlideWidth;
+                hackathonContainer.style.transform = `translateX(-${hackathonSlidePosition}px)`;
+            }
+        });
+
+        // Auto-slide for hackathon carousel
+        setInterval(() => {
+            const maxSlide = (hackathonContainer.children.length - 3) * hackathonSlideWidth;
+            if (hackathonSlidePosition < maxSlide) {
+                hackathonSlidePosition += hackathonSlideWidth;
+            } else {
+                hackathonSlidePosition = 0;
+            }
+            hackathonContainer.style.transform = `translateX(-${hackathonSlidePosition}px)`;
+        }, 5000);
+
+        // Join game button functionality
+        const joinGameButtons = document.querySelectorAll('.join-game-btn');
+        joinGameButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const card = button.closest('.card');
+                const gameTitle = card.querySelector('.card-title').textContent;
+                const fee = card.querySelector('.price')?.textContent || 'Free';
+
+                modalTitle.textContent = 'Join Game';
+                modalBody.innerHTML = `
+                    <p>You are about to join: <strong>${gameTitle}</strong></p>
+                    <p>Entry fee: <strong>${fee}</strong></p>
+                    <p>Are you sure you want to proceed?</p>
+                `;
+                modalFooter.innerHTML = `
+                    <button class="btn" id="confirmJoin">Confirm</button>
+                    <button class="btn btn-secondary" id="cancelJoin">Cancel</button>
+                `;
+
+                modal.classList.add('active');
+
+                document.getElementById('confirmJoin').addEventListener('click', () => {
+                    modal.classList.remove('active');
+                    showNotification('You have successfully joined the game!', 'success');
+                });
+
+                document.getElementById('cancelJoin').addEventListener('click', () => {
+                    modal.classList.remove('active');
+                });
+            });
+        });
+
+        // Register button functionality
+        const registerButtons = document.querySelectorAll('.register-btn');
+        registerButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const card = button.closest('.hackathon-card');
+                const hackathonTitle = card.querySelector('.hackathon-title').textContent;
+
+                modalTitle.textContent = 'Register for Hackathon';
+                modalBody.innerHTML = `
+                    <div class="form-group">
+                        <label class="form-label">Team Name</label>
+                        <input type="text" class="form-input" placeholder="Enter your team name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Team Members</label>
+                        <textarea class="form-input form-textarea" placeholder="List your team members (one per line)"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Project Idea (Optional)</label>
+                        <textarea class="form-input form-textarea" placeholder="Briefly describe your project idea"></textarea>
+                    </div>
+                `;
+                modalFooter.innerHTML = `
+                    <button class="btn" id="confirmRegister">Register Now</button>
+                    <button class="btn btn-secondary" id="cancelRegister">Cancel</button>
+                `;
+
+                modal.classList.add('active');
+
+                document.getElementById('confirmRegister').addEventListener('click', () => {
+                    modal.classList.remove('active');
+                    showNotification(`You have successfully registered for ${hackathonTitle}!`, 'success');
+                });
+
+                document.getElementById('cancelRegister').addEventListener('click', () => {
+                    modal.classList.remove('active');
+                });
+            });
+        });
+
+        // View details button functionality
+        const viewDetailsButtons = document.querySelectorAll('.view-details');
+        viewDetailsButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const card = button.closest('.hackathon-card');
+                const hackathonTitle = card.querySelector('.hackathon-title').textContent;
+                const organizer = card.querySelector('.hackathon-organizer').textContent;
+                const date = card.querySelector('.meta-item:nth-child(1) span').textContent;
+                const mode = card.querySelector('.meta-item:nth-child(2) span').textContent;
+                const prize = card.querySelector('.meta-item:nth-child(3) span').textContent;
+
+                modalTitle.textContent = hackathonTitle;
+                modalBody.innerHTML = `
+                    <p><strong>Organizer:</strong> ${organizer}</p>
+                    <p><strong>Date:</strong> ${date}</p>
+                    <p><strong>Mode:</strong> ${mode}</p>
+                    <p><strong>Prize Pool:</strong> ${prize}</p>
+                    <div class="card-tags" style="margin-top: 1rem;">
+                        ${Array.from(card.querySelectorAll('.theme-tag')).map(tag =>
+                    `<span class="tag">${tag.textContent}</span>`
+                ).join('')}
+                    </div>
+                    <p style="margin-top: 1rem;">Join developers from around the world to build innovative solutions and compete for amazing prizes. This hackathon focuses on creating practical solutions to real-world problems.</p>
+                `;
+                modalFooter.innerHTML = `
+                    <button class="btn" id="closeDetails">Close</button>
+                `;
+
+                modal.classList.add('active');
+
+                document.getElementById('closeDetails').addEventListener('click', () => {
+                    modal.classList.remove('active');
+                });
+            });
+        });
+
+        // Apply for mentorship button functionality
+        const applyMentorshipBtns = document.querySelectorAll('#applyMentorshipBtn, #applyMentorshipBtn2');
+        applyMentorshipBtns.forEach(button => {
+            button.addEventListener('click', () => {
+                modalTitle.textContent = 'Apply for Mentorship';
+                modalBody.innerHTML = `
+                    <div class="form-group">
+                        <label class="form-label">Your Name</label>
+                        <input type="text" class="form-input" placeholder="Enter your name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-input" placeholder="Enter your email">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Experience Level</label>
+                        <select class="form-input">
+                            <option value="">Select your level</option>
+                            <option value="beginner">Beginner</option>
+                            <option value="intermediate">Intermediate</option>
+                            <option value="advanced">Advanced</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Goals</label>
+                        <textarea class="form-input form-textarea" placeholder="What do you hope to achieve through mentorship?"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Preferred Mentorship Area</label>
+                        <select class="form-input">
+                            <option value="">Select an area</option>
+                            <option value="web-dev">Web Development</option>
+                            <option value="mobile">Mobile Development</option>
+                            <option value="ai">AI/Machine Learning</option>
+                            <option value="data-science">Data Science</option>
+                            <option value="career">Career Guidance</option>
+                        </select>
+                    </div>
+                `;
+                modalFooter.innerHTML = `
+                    <button class="btn" id="submitApplication">Submit Application</button>
+                    <button class="btn btn-secondary" id="cancelApplication">Cancel</button>
+                `;
+
+                modal.classList.add('active');
+
+                document.getElementById('submitApplication').addEventListener('click', () => {
+                    modal.classList.remove('active');
+                    showNotification('Your mentorship application has been submitted successfully!', 'success');
+                });
+
+                document.getElementById('cancelApplication').addEventListener('click', () => {
+                    modal.classList.remove('active');
+                });
+            });
+        });
+
+        // Start coding button functionality
+        document.getElementById('startCodingBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            showPage('collab');
+        });
+
+        // Join as mentor button functionality
+        document.getElementById('joinMentorBtn')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            modalTitle.textContent = 'Join as Mentor';
+            modalBody.innerHTML = `
+                <div class="form-group">
+                    <label class="form-label">Your Name</label>
+                    <input type="text" class="form-input" placeholder="Enter your name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Professional Experience</label>
+                    <textarea class="form-input form-textarea" placeholder="Tell us about your professional experience"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Areas of Expertise</label>
+                    <textarea class="form-input form-textarea" placeholder="List your areas of expertise (e.g., JavaScript, Python, React, etc.)"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Why do you want to be a mentor?</label>
+                    <textarea class="form-input form-textarea" placeholder="Tell us why you want to mentor others"></textarea>
+                </div>
+            `;
+            modalFooter.innerHTML = `
+                <button class="btn" id="submitMentor">Submit Application</button>
+                <button class="btn btn-secondary" id="cancelMentor">Cancel</button>
+            `;
+
+            modal.classList.add('active');
+
+            document.getElementById('submitMentor').addEventListener('click', () => {
+                modal.classList.remove('active');
+                showNotification('Your mentor application has been submitted successfully!', 'success');
+            });
+
+            document.getElementById('cancelMentor').addEventListener('click', () => {
+                modal.classList.remove('active');
+            });
+        });
+
+        // Explore Features button functionality (New)
+        document.getElementById('exploreFeaturesBtn')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.querySelector('.features-section').scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+
+        // Learn more buttons functionality
+        document.getElementById('learnMoreBtn')?.addEventListener('click', () => {
+            modalTitle.textContent = 'AI Matching Engine';
+            modalBody.innerHTML = `
+                <p>Our AI-powered matching engine analyzes your skills, goals, and preferences to connect you with the most suitable mentors, collaborators, and opportunities.</p>
+                <h4 style="margin-top: 1rem; margin-bottom: 0.5rem;">How it works:</h4>
+                <ul style="padding-left: 1.5rem; margin-bottom: 1rem;">
+                    <li>Complete your profile with your skills and goals</li>
+                    <li>Our AI analyzes your profile and matches you with compatible users</li>
+                    <li>Receive personalized recommendations for mentors, collaborators, and opportunities</li>
+                    <li>Connect and start collaborating!</li>
+                </ul>
+                <p>The more you use the platform, the smarter our AI gets at finding the perfect matches for you.</p>
+            `;
+            modalFooter.innerHTML = `
+                <button class="btn" id="closeLearnMore">Close</button>
+            `;
+
+            modal.classList.add('active');
+
+            document.getElementById('closeLearnMore').addEventListener('click', () => {
+                modal.classList.remove('active');
+            });
+        });
+
+        document.getElementById('learnMoreBtn2')?.addEventListener('click', () => {
+            modalTitle.textContent = 'About ZenCodr';
+            modalBody.innerHTML = `
+                <p>ZenCodr is a comprehensive platform designed for coders of all levels. We provide tools and resources to help you learn, collaborate, and grow your coding skills.</p>
+                <h4 style="margin-top: 1rem; margin-bottom: 0.5rem;">Our Mission</h4>
+                <p>To create a global community where coders can learn, collaborate, and build the future together.</p>
+                <h4 style="margin-top: 1rem; margin-bottom: 0.5rem;">Our Vision</h4>
+                <p>To be the leading platform for coding education, collaboration, and career development.</p>
+            `;
+            modalFooter.innerHTML = `
+                <button class="btn" id="closeLearnMore2">Close</button>
+            `;
+
+            modal.classList.add('active');
+
+            document.getElementById('closeLearnMore2').addEventListener('click', () => {
+                modal.classList.remove('active');
+            });
+        });
+
+        // Portfolio button functionality
+        document.getElementById('portfolioBtn')?.addEventListener('click', () => {
+            modalTitle.textContent = 'Portfolio Builder';
+            modalBody.innerHTML = `
+                <p>Showcase your projects and achievements with our professional portfolio builder.</p>
+                <h4 style="margin-top: 1rem; margin-bottom: 0.5rem;">Features:</h4>
+                <ul style="padding-left: 1.5rem; margin-bottom: 1rem;">
+                    <li>Customizable portfolio templates</li>
+                    <li>Project showcase with detailed descriptions</li>
+                    <li>Skills and certifications section</li>
+                    <li>Integration with GitHub and other platforms</li>
+                    <li>Analytics to track portfolio views</li>
+                </ul>
+                <p>Your portfolio is automatically updated as you complete projects and participate in hackathons on ZenCodr.</p>
+            `;
+            modalFooter.innerHTML = `
+                <button class="btn" id="closePortfolio">Close</button>
+            `;
+
+            modal.classList.add('active');
+
+            document.getElementById('closePortfolio').addEventListener('click', () => {
+                modal.classList.remove('active');
+            });
+        });
+
+        // Progress button functionality
+        document.getElementById('progressBtn')?.addEventListener('click', () => {
+            modalTitle.textContent = 'Progress Tracking';
+            modalBody.innerHTML = `
+                <p>Monitor your learning journey with detailed analytics and insights.</p>
+                <h4 style="margin-top: 1rem; margin-bottom: 0.5rem;">Track:</h4>
+                <ul style="padding-left: 1.5rem; margin-bottom: 1rem;">
+                    <li>Skill development over time</li>
+                    <li>Project completion rates</li>
+                    <li>Hackathon participation and results</li>
+                    <li>Mentorship session progress</li>
+                    <li>Community engagement metrics</li>
+                </ul>
+                <p>Visualize your progress with charts and graphs, and identify areas for improvement.</p>
+            `;
+            modalFooter.innerHTML = `
+                <button class="btn" id="closeProgress">Close</button>
+            `;
+
+            modal.classList.add('active');
+
+            document.getElementById('closeProgress').addEventListener('click', () => {
+                modal.classList.remove('active');
+            });
+        });
+
+        // Get started button functionality
+        document.getElementById('getStartedBtn')?.addEventListener('click', () => {
+            modalTitle.textContent = 'Get Started with ZenCodr';
+            modalBody.innerHTML = `
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" class="form-input" placeholder="Enter your full name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" placeholder="Create a password">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">I am a:</label>
+                    <select class="form-input">
+                        <option value="">Select your role</option>
+                        <option value="student">Student</option>
+                        <option value="beginner">Beginner Coder</option>
+                        <option value="developer">Developer</option>
+                        <option value="mentor">Mentor</option>
+                    </select>
+                </div>
+            `;
+            modalFooter.innerHTML = `
+                <button class="btn" id="submitSignup">Sign Up</button>
+                <button class="btn btn-secondary" id="cancelSignup">Cancel</button>
+            `;
+
+            modal.classList.add('active');
+
+            document.getElementById('submitSignup').addEventListener('click', () => {
+                modal.classList.remove('active');
+                showNotification('Account created successfully! Welcome to ZenCodr!', 'success');
+            });
+
+            document.getElementById('cancelSignup').addEventListener('click', () => {
+                modal.classList.remove('active');
+            });
+        });
+
+        // Contact mentorship button functionality
+        document.getElementById('contactMentorshipBtn')?.addEventListener('click', () => {
+            modalTitle.textContent = 'Contact Us';
+            modalBody.innerHTML = `
+                <div class="form-group">
+                    <label class="form-label">Your Name</label>
+                    <input type="text" class="form-input" placeholder="Enter your name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Subject</label>
+                    <input type="text" class="form-input" placeholder="Enter the subject">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Message</label>
+                    <textarea class="form-input form-textarea" placeholder="Enter your message"></textarea>
+                </div>
+            `;
+            modalFooter.innerHTML = `
+                <button class="btn" id="sendMessage">Send Message</button>
+                <button class="btn btn-secondary" id="cancelMessage">Cancel</button>
+            `;
+
+            modal.classList.add('active');
+
+            document.getElementById('sendMessage').addEventListener('click', () => {
+                modal.classList.remove('active');
+                showNotification('Your message has been sent successfully!', 'success');
+            });
+
+            document.getElementById('cancelMessage').addEventListener('click', () => {
+                modal.classList.remove('active');
+            });
+        });
+
+        // Modal close functionality
+        modalClose.addEventListener('click', () => {
+            modal.classList.remove('active');
+        });
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('active');
+            }
+        });
+
+        // Floating action button functionality
+        fabBtn.addEventListener('click', () => {
+            modalTitle.textContent = 'Quick Actions';
+            modalBody.innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <button class="btn" style="height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <i class="fas fa-code"></i>
+                        <span style="font-size: 0.8rem; margin-top: 0.3rem;">New Project</span>
+                    </button>
+                    <button class="btn" style="height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <i class="fas fa-users"></i>
+                        <span style="font-size: 0.8rem; margin-top: 0.3rem;">Join Room</span>
+                    </button>
+                    <button class="btn" style="height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <i class="fas fa-trophy"></i>
+                        <span style="font-size: 0.8rem; margin-top: 0.3rem;">Hackathon</span>
+                    </button>
+                    <button class="btn" style="height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                        <span style="font-size: 0.8rem; margin-top: 0.3rem;">Mentorship</span>
+                    </button>
+                </div>
+            `;
+            modalFooter.innerHTML = `
+                <button class="btn btn-secondary" id="closeFab">Close</button>
+            `;
+
+            modal.classList.add('active');
+
+            document.getElementById('closeFab').addEventListener('click', () => {
+                modal.classList.remove('active');
+            });
+        });
+
+        // Chat functionality
+        chatInput?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                const message = chatInput.value.trim();
+                if (message) {
+                    const now = new Date();
+                    const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                    const messageElement = document.createElement('div');
+                    messageElement.className = 'chat-message';
+                    messageElement.innerHTML = `
+                        <div class="chat-message-header">
+                            <span class="chat-username">You</span>
+                            <span class="chat-time">${time}</span>
+                        </div>
+                        <div class="chat-text">${message}</div>
+                    `;
+
+                    chatMessages.appendChild(messageElement);
+                    chatInput.value = '';
+
+                    // Scroll to bottom
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                    // Simulate response after a delay
+                    setTimeout(() => {
+                        const responseElement = document.createElement('div');
+                        responseElement.className = 'chat-message';
+                        responseElement.innerHTML = `
+                            <div class="chat-message-header">
+                                <span class="chat-username">Alex</span>
+                                <span class="chat-time">${time}</span>
+                            </div>
+                            <div class="chat-text">Great point! Let's implement that idea.</div>
+                        `;
+
+                        chatMessages.appendChild(responseElement);
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }, 1000);
+                }
+            }
+        });
+
+        // Notification function
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.style.position = 'fixed';
+            notification.style.bottom = '20px';
+            notification.style.left = '50%';
+            notification.style.transform = 'translateX(-50%)';
+            notification.style.background = type === 'success' ? 'var(--success)' : type === 'error' ? 'var(--danger)' : 'var(--accent)';
+            notification.style.color = 'white';
+            notification.style.padding = '1rem 2rem';
+            notification.style.borderRadius = '0.5rem';
+            notification.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.3)';
+            notification.style.zIndex = '1000';
+            notification.style.animation = 'slideUp 0.3s ease-out';
+            notification.textContent = message;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideDown 0.3s ease-out';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // AI Mentorship Assistant Implementation
+        let currentQuestionIndex = 0;
+        let userAnswers = {};
+        let userProfile = {};
+
+        // Questions for the AI Mentorship Assistant
+        const mentorshipQuestions = [
+            {
+                id: 1,
+                question: "Which programming language(s) are you most interested in learning or improving?",
+                options: [
+                    { id: 'a', text: 'Python' },
+                    { id: 'b', text: 'JavaScript' },
+                    { id: 'c', text: 'Java' },
+                    { id: 'd', text: 'C/C++' },
+                    { id: 'e', text: 'Other (please specify)' },
+                    { id: 'f', text: "I'm not sure yet - I need guidance" }
+                ],
+                category: 'language'
+            },
+            {
+                id: 2,
+                question: "What area of development excites you the most?",
+                options: [
+                    { id: 'a', text: 'Web Development (Frontend, Backend, Full-stack)' },
+                    { id: 'b', text: 'Mobile App Development' },
+                    { id: 'c', text: 'AI/Machine Learning' },
+                    { id: 'd', text: 'Data Science' },
+                    { id: 'e', text: 'Cybersecurity' },
+                    { id: 'f', text: 'Algorithms & Data Structures' }
+                ],
+                category: 'domain'
+            },
+            {
+                id: 3,
+                question: "How would you describe your current coding experience?",
+                options: [
+                    { id: 'a', text: 'Complete beginner (just starting or haven\'t coded before)' },
+                    { id: 'b', text: 'Beginner (know basics but struggle with complex problems)' },
+                    { id: 'c', text: 'Intermediate (comfortable with fundamentals, can build simple projects)' },
+                    { id: 'd', text: 'Advanced (proficient in at least one language, can solve complex problems)' },
+                    { id: 'e', text: 'Expert (multiple languages, system design, architecture)' }
+                ],
+                category: 'experience'
+            },
+            {
+                id: 4,
+                question: "What is your primary learning goal right now?",
+                options: [
+                    { id: 'a', text: 'Build a strong foundation in programming fundamentals' },
+                    { id: 'b', text: 'Create my first complete project from scratch' },
+                    { id: 'c', text: 'Master advanced concepts and best practices' },
+                    { id: 'd', text: 'Prepare for technical interviews' },
+                    { id: 'e', text: 'Transition to a new programming language or domain' },
+                    { id: 'f', text: 'Develop a specific skill for a current project' }
+                ],
+                category: 'goal'
+            },
+            {
+                id: 5,
+                question: "How do you prefer to learn new coding concepts?",
+                options: [
+                    { id: 'a', text: 'Step-by-step guided tutorials with clear explanations' },
+                    { id: 'b', text: 'Project-based learning by building real applications' },
+                    { id: 'c', text: 'Deep dives into theory and fundamentals' },
+                    { id: 'd', text: 'Code reviews and feedback on my existing code' },
+                    { id: 'e', text: 'Problem-solving practice with challenges' },
+                    { id: 'f', text: 'A mix of all approaches' }
+                ],
+                category: 'learningStyle'
+            }
+        ];
+
+        // Initialize AI Mentorship Assistant
+        function initializeAIMentorship() {
+            // Reset state
+            currentQuestionIndex = 0;
+            userAnswers = {};
+            userProfile = {};
+
+            // Hide mentor recommendations and show AI assistant
+            mentorRecommendations.classList.remove('active');
+            document.getElementById('aiAssistant').style.display = 'block';
+
+            // Clear previous conversation
+            aiConversation.innerHTML = '';
+
+            // Add welcome message
+            addAIMessage("Welcome to ZenCodr Mentorship! I'm your AI assistant here to help you find the perfect mentor for your coding journey. I'll ask a few quick questions to understand your goals and preferences. This will help me match you with mentors who can best support your learning path. Ready to begin? Let's start with your first question.");
+
+            // Show first question after a delay
+            setTimeout(() => {
+                showQuestion();
+            }, 2000);
+        }
+
+        // Add AI message to conversation
+        function addAIMessage(message) {
+            const messageElement = document.createElement('div');
+            messageElement.className = 'ai-message';
+            messageElement.innerHTML = `
+                <div class="message-header">
+                    <span class="message-sender">ZenCodr AI</span>
+                    <span class="message-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+                <div class="message-content">${message}</div>
+            `;
+
+            aiConversation.appendChild(messageElement);
+            aiConversation.scrollTop = aiConversation.scrollHeight;
+        }
+
+        // Add user message to conversation
+        function addUserMessage(message) {
+            const messageElement = document.createElement('div');
+            messageElement.className = 'user-message';
+            messageElement.innerHTML = `
+                <div class="message-header">
+                    <span class="message-sender">You</span>
+                    <span class="message-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+                <div class="message-content">${message}</div>
+            `;
+
+            aiConversation.appendChild(messageElement);
+            aiConversation.scrollTop = aiConversation.scrollHeight;
+        }
+
+        // Show typing indicator
+        function showTypingIndicator() {
+            const typingElement = document.createElement('div');
+            typingElement.className = 'ai-message typing-indicator-container';
+            typingElement.id = 'typingIndicator';
+            typingElement.innerHTML = `
+                <div class="message-header">
+                    <span class="message-sender">ZenCodr AI</span>
+                    <span class="message-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+                <div class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            `;
+
+            aiConversation.appendChild(typingElement);
+            aiConversation.scrollTop = aiConversation.scrollHeight;
+        }
+
+        // Remove typing indicator
+        function removeTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        // Show current question
+        function showQuestion() {
+            if (currentQuestionIndex >= mentorshipQuestions.length) {
+                // All questions answered, analyze and provide recommendations
+                analyzeAnswers();
+                return;
+            }
+
+            const currentQuestion = mentorshipQuestions[currentQuestionIndex];
+
+            // Show typing indicator
+            showTypingIndicator();
+
+            // Simulate AI thinking
+            setTimeout(() => {
+                removeTypingIndicator();
+
+                // Add question to conversation
+                addAIMessage(currentQuestion.question);
+
+                // Create question options
+                const optionsContainer = document.createElement('div');
+                optionsContainer.className = 'options-container';
+
+                currentQuestion.options.forEach(option => {
+                    const optionElement = document.createElement('div');
+                    optionElement.className = 'option';
+                    optionElement.innerHTML = `
+                        <div class="option-letter">${option.id.toUpperCase()}</div>
+                        <div class="option-text">${option.text}</div>
+                    `;
+
+                    optionElement.addEventListener('click', () => {
+                        handleAnswer(option, currentQuestion);
+                    });
+
+                    optionsContainer.appendChild(optionElement);
+                });
+
+                // Show question container
+                questionContainer.innerHTML = '';
+                questionContainer.appendChild(optionsContainer);
+                questionContainer.style.display = 'block';
+            }, 1500);
+        }
+
+        // Handle user answer
+        function handleAnswer(option, question) {
+            // Store answer
+            userAnswers[question.category] = option.text;
+
+            // Add user answer to conversation
+            addUserMessage(`${option.id.toUpperCase()}) ${option.text}`);
+
+            // Hide question container
+            questionContainer.style.display = 'none';
+
+            // Move to next question
+            currentQuestionIndex++;
+
+            // Show next question or analyze answers
+            setTimeout(() => {
+                showQuestion();
+            }, 1000);
+        }
+
+        // Analyze answers and create user profile
+        function analyzeAnswers() {
+            // Show typing indicator
+            showTypingIndicator();
+
+            // Simulate AI analysis
+            setTimeout(() => {
+                removeTypingIndicator();
+
+                // Determine skill level
+                let skillLevel = 'beginner';
+                const experienceAnswer = userAnswers.experience || '';
+                if (experienceAnswer.includes('Intermediate')) {
+                    skillLevel = 'intermediate';
+                } else if (experienceAnswer.includes('Advanced') || experienceAnswer.includes('Expert')) {
+                    skillLevel = 'advanced';
+                }
+
+                // Determine primary language
+                let primaryLanguage = 'Python';
+                const languageAnswer = userAnswers.language || '';
+                if (languageAnswer.includes('JavaScript')) {
+                    primaryLanguage = 'JavaScript';
+                } else if (languageAnswer.includes('Java')) {
+                    primaryLanguage = 'Java';
+                } else if (languageAnswer.includes('C/C++')) {
+                    primaryLanguage = 'C++';
+                } else if (languageAnswer.includes('not sure')) {
+                    primaryLanguage = 'Python'; // Default for beginners
+                }
+
+                // Determine domain
+                let domain = 'Web Development';
+                const domainAnswer = userAnswers.domain || '';
+                if (domainAnswer.includes('Mobile')) {
+                    domain = 'Mobile Development';
+                } else if (domainAnswer.includes('AI') || domainAnswer.includes('Machine Learning')) {
+                    domain = 'AI/ML';
+                } else if (domainAnswer.includes('Data Science')) {
+                    domain = 'Data Science';
+                } else if (domainAnswer.includes('Cybersecurity')) {
+                    domain = 'Cybersecurity';
+                } else if (domainAnswer.includes('Algorithms') || domainAnswer.includes('Data Structures')) {
+                    domain = 'DSA';
+                }
+
+                // Determine learning focus
+                let learningFocus = 'foundation';
+                const goalAnswer = userAnswers.goal || '';
+                if (goalAnswer.includes('project') || goalAnswer.includes('specific skill')) {
+                    learningFocus = 'project';
+                } else if (goalAnswer.includes('advanced') || goalAnswer.includes('interview')) {
+                    learningFocus = 'advanced';
+                } else if (goalAnswer.includes('transition')) {
+                    learningFocus = 'transition';
+                }
+
+                // Create user profile
+                userProfile = {
+                    skillLevel,
+                    primaryLanguage,
+                    domain,
+                    learningFocus,
+                    learningStyle: userAnswers.learningStyle || 'mixed'
+                };
+
+                // Generate profile tag
+                const profileTag = `${skillLevel.charAt(0).toUpperCase() + skillLevel.slice(1)} ${primaryLanguage} ${domain.replace('/', ' ')} ${learningFocus}`;
+
+                // Add analysis message
+                addAIMessage(`Thank you for sharing your preferences! Based on your answers, I've created your learning profile: <strong>${profileTag}</strong><br><br>You're looking to ${userAnswers.goal} with a focus on ${userAnswers.language} in ${userAnswers.domain}. Since you're at a ${userAnswers.experience} stage, you'll benefit most from mentors who specialize in ${userAnswers.learningStyle}.<br><br>I'm now searching our mentor database for the best matches based on your profile.`);
+
+                // Show typing indicator again
+                showTypingIndicator();
+
+                // Simulate mentor search
+                setTimeout(() => {
+                    removeTypingIndicator();
+
+                    // Add final message
+                    let guidanceMessage = "Let me show you your personalized mentor recommendations now. Each mentor profile includes their background, expertise areas, and mentoring approach to help you make the perfect choice.";
+
+                    if (skillLevel === 'beginner') {
+                        guidanceMessage += " I recommend starting with mentors who excel at building strong foundations and providing structured guidance.";
+                    } else if (skillLevel === 'intermediate') {
+                        guidanceMessage += " I'm focusing on mentors who can help you level up with project-based learning and code reviews.";
+                    } else {
+                        guidanceMessage += " I'm looking for mentors with deep expertise who can challenge you with advanced concepts and best practices.";
+                    }
+
+                    addAIMessage(guidanceMessage);
+
+                    // Show mentor recommendations
+                    setTimeout(() => {
+                        showMentorRecommendations();
+                    }, 2000);
+                }, 2000);
+            }, 2000);
+        }
+
+        // Show mentor recommendations based on user profile
+        function showMentorRecommendations() {
+            // Hide AI assistant and show mentor recommendations
+            document.getElementById('aiAssistant').style.display = 'none';
+            mentorRecommendations.classList.add('active');
+
+            // Clear previous mentor cards
+            mentorCards.innerHTML = '';
+
+            // Generate mentor recommendations based on user profile
+            const mentors = generateMentorRecommendations(userProfile);
+
+            // Create mentor cards
+            mentors.forEach(mentor => {
+                const mentorCard = document.createElement('div');
+                mentorCard.className = 'mentor-card';
+
+                const expertiseTags = mentor.expertise.map(exp =>
+                    `<span class="expertise-tag">${exp}</span>`
+                ).join('');
+
+                mentorCard.innerHTML = `
+                    <div class="mentor-match-score">${mentor.matchScore}%</div>
+                    <div class="mentor-header">
+                        <div class="mentor-avatar">${mentor.name.split(' ').map(n => n[0]).join('')}</div>
+                        <div class="mentor-info">
+                            <h3>${mentor.name}</h3>
+                            <p class="mentor-title">${mentor.title}</p>
+                        </div>
+                    </div>
+                    <p class="mentor-bio">${mentor.bio}</p>
+                    <div class="mentor-expertise">
+                        ${expertiseTags}
+                    </div>
+                    <div class="mentor-stats">
+                        <div class="stat-item">
+                            <div class="stat-value">${mentor.mentees}</div>
+                            <div class="stat-label">Mentees</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${mentor.rating}</div>
+                            <div class="stat-label">Rating</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${mentor.sessions}</div>
+                            <div class="stat-label">Sessions</div>
+                        </div>
+                    </div>
+                    <div class="mentor-actions">
+                        <button class="btn btn-sm">View Profile</button>
+                        <button class="btn btn-secondary btn-sm">Request Mentorship</button>
+                    </div>
+                `;
+
+                mentorCards.appendChild(mentorCard);
+            });
+        }
+
+        // Generate mentor recommendations based on user profile
+        function generateMentorRecommendations(profile) {
+            // Sample mentor data - in a real app, this would come from a database
+            const allMentors = [
+                {
+                    id: 1,
+                    name: "Sarah Johnson",
+                    title: "Senior Software Engineer at TechCorp",
+                    bio: "Passionate about helping beginners build strong foundations in programming. I focus on practical skills and real-world applications.",
+                    expertise: ["Python", "Web Development", "Beginner Friendly"],
+                    mentees: 45,
+                    rating: 4.9,
+                    sessions: 120,
+                    specialties: { skillLevel: "beginner", domain: "Web Development", language: "Python" }
+                },
+                {
+                    id: 2,
+                    name: "Michael Chen",
+                    title: "Full-Stack Developer & Instructor",
+                    bio: "I love guiding intermediate developers to the next level through project-based learning and code reviews.",
+                    expertise: ["JavaScript", "React", "Node.js", "Project-Based Learning"],
+                    mentees: 32,
+                    rating: 4.8,
+                    sessions: 95,
+                    specialties: { skillLevel: "intermediate", domain: "Web Development", language: "JavaScript" }
+                },
+                {
+                    id: 3,
+                    name: "Dr. Emily Rodriguez",
+                    title: "AI Research Scientist at DataMind",
+                    bio: "I help developers transition into AI/ML by focusing on both theoretical understanding and practical implementation.",
+                    expertise: ["Python", "Machine Learning", "Data Science", "Theory & Practice"],
+                    mentees: 28,
+                    rating: 4.9,
+                    sessions: 85,
+                    specialties: { skillLevel: "advanced", domain: "AI/ML", language: "Python" }
+                },
+                {
+                    id: 4,
+                    name: "Alex Kumar",
+                    title: "Mobile App Developer & Entrepreneur",
+                    bio: "I specialize in helping developers build their first mobile apps and transition from web to mobile development.",
+                    expertise: ["React Native", "Mobile Development", "App Design", "Beginner to Intermediate"],
+                    mentees: 38,
+                    rating: 4.7,
+                    sessions: 110,
+                    specialties: { skillLevel: "intermediate", domain: "Mobile Development", language: "JavaScript" }
+                },
+                {
+                    id: 5,
+                    name: "David Park",
+                    title: "Senior Backend Engineer",
+                    bio: "I focus on helping developers master advanced concepts in system design, algorithms, and data structures.",
+                    expertise: ["Java", "System Design", "Algorithms", "Interview Prep"],
+                    mentees: 25,
+                    rating: 4.8,
+                    sessions: 75,
+                    specialties: { skillLevel: "advanced", domain: "DSA", language: "Java" }
+                }
+            ];
+
+            // Calculate match scores and sort mentors
+            const mentorsWithScores = allMentors.map(mentor => {
+                let score = 70; // Base score
+
+                // Add points for matching skill level
+                if (mentor.specialties.skillLevel === profile.skillLevel) {
+                    score += 15;
+                } else if (
+                    (profile.skillLevel === 'beginner' && mentor.specialties.skillLevel === 'intermediate') ||
+                    (profile.skillLevel === 'intermediate' && mentor.specialties.skillLevel === 'advanced')
+                ) {
+                    score += 5; // Still compatible but not perfect match
+                }
+
+                // Add points for matching domain
+                if (mentor.specialties.domain === profile.domain) {
+                    score += 10;
+                }
+
+                // Add points for matching language
+                if (mentor.specialties.language === profile.primaryLanguage) {
+                    score += 5;
+                }
+
+                // Add some randomness to make it feel more natural
+                score += Math.floor(Math.random() * 5);
+
+                return {
+                    ...mentor,
+                    matchScore: Math.min(score, 99) // Cap at 99%
+                };
+            });
+
+            // Sort by match score and return top 3
+            return mentorsWithScores
+                .sort((a, b) => b.matchScore - a.matchScore)
+                .slice(0, 3);
+        }
+
+        // Restart assessment button
+        restartAssessment.addEventListener('click', () => {
+            initializeAIMentorship();
+        });
+
+        // Animated Counter Function for Stats Section
+        function animateCounter(element, target, duration = 2000) {
+            let start = 0;
+            const increment = target / (duration / 16);
+
+            const timer = setInterval(() => {
+                start += increment;
+                if (start >= target) {
+                    element.textContent = target.toLocaleString() + '+';
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.floor(start).toLocaleString();
+                }
+            }, 16);
+        }
+
+        // Initialize counters when they come into view
+        function initializeCounters() {
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.5
+            };
+
+            const counterObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !entry.target.classList.contains('counted')) {
+                        const target = parseInt(entry.target.getAttribute('data-target'));
+                        animateCounter(entry.target, target);
+                        entry.target.classList.add('counted');
+                    }
+                });
+            }, observerOptions);
+
+            // Observe all stat numbers
+            const statNumbers = document.querySelectorAll('.stat-number');
+            statNumbers.forEach(number => {
+                counterObserver.observe(number);
+            });
+        }
+
+        // Initialize the page
+        showPage('landing');
+
+        // Add animation classes to elements when they come into view
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-fade-in');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.card').forEach(card => {
+            observer.observe(card);
+        });
+    </script>
+</body>
+
+</html>
